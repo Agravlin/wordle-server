@@ -1,0 +1,52 @@
+package api
+
+import (
+	"encoding/json"
+	"net/http"
+
+	"github.com/agravlin/wordle-server/internal/service"
+	"github.com/gorilla/websocket"
+)
+
+var upgrader = websocket.Upgrader{
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
+	CheckOrigin: func(r *http.Request) bool {
+		return true
+	},
+}
+
+type Handler struct {
+	svc *service.GameService
+}
+
+func NewHandler(svc *service.GameService) *Handler {
+	return &Handler{svc: svc}
+}
+
+// POST /api/join
+func (h *Handler) HandleJoinRoom(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req struct {
+		RoomID   string `json:"room_id"`
+		Nickname string `json:"nickname"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	if err := h.svc.ValidateJoinRequest(req.RoomID, req.Nickname); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(`{"status": "ok"}`))
+}

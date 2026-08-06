@@ -11,6 +11,8 @@ const (
 	msgEmptyNick         = "Nick can not be empty"
 	msgRoomNotFound      = "Room %s not found"
 	msgNickAlreadyExists = "Nick %s already exists in room %s"
+	msgGameOver          = "Game is already finished"
+	msgNotLegitWord      = "Not a word"
 )
 
 // Static errors
@@ -18,6 +20,8 @@ var (
 	ErrLengthMismatch = errors.New(msgLengthMismatch)
 	ErrInvalidChar    = errors.New(msgInvalidChar)
 	ErrEmptyNick      = errors.New(msgEmptyNick)
+	ErrGameOver       = errors.New(msgGameOver)
+	ErrNotLegitWord   = errors.New(msgNotLegitWord)
 )
 
 // Dynamic errors

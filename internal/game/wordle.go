@@ -9,16 +9,32 @@ import (
 
 //go:embed words.txt
 var wordListFile string
-
 var ValidWords []string
+var validWordsMap = make(map[string]bool)
 
 type Feedback int
 
 const (
-	Gray   Feedback = iota // 0 (Absent)
-	Yellow                 // 1 (Present)
-	Green                  // 2 (Correct)
+	StatusEmpty  Feedback = iota // Empty box
+	StatusTyped                  // Letter typed (but not submitted)
+	StatusGray                   // 0 (Absent)
+	StatusYellow                 // 1 (Present)
+	StatusGreen                  // 2 (Correct)
 )
+
+func init() {
+	lines := strings.Split(wordListFile, "\n")
+
+	for _, line := range lines {
+		word := strings.TrimSpace(line)
+		word = strings.ToLower(word)
+
+		if word != "" {
+			ValidWords = append(ValidWords, word)
+			validWordsMap[word] = true
+		}
+	}
+}
 
 func CheckGuess(guess, target string) ([]Feedback, error) {
 	if len(guess) != len(target) {
@@ -40,29 +56,30 @@ func CheckGuess(guess, target string) ([]Feedback, error) {
 	// Match correct letters
 	for i := range length {
 		if guess[i] == target[i] {
-			result[i] = Green
+			result[i] = StatusGreen
 			targetCounts[guess[i]]--
 		}
 	}
 
 	// Mark rest as yellow or grey
 	for i := range length {
-		if result[i] == Green {
+		if result[i] == StatusGreen {
 			continue
 		}
 
 		if targetCounts[guess[i]] > 0 {
-			result[i] = Yellow
+			result[i] = StatusYellow
 			targetCounts[guess[i]]--
 		} else {
-			result[i] = Gray
+			result[i] = StatusGray
 		}
 	}
 
 	return result, nil
 }
 
-func init() {
-	cleanFile := strings.ReplaceAll(wordListFile, "\r", "") // Windows' CRLF
-	ValidWords = strings.Split(strings.TrimSpace(cleanFile), "\n")
+func isLegitWord(guess string) bool {
+	guess = strings.ToLower(strings.TrimSpace(guess))
+
+	return validWordsMap[guess]
 }

@@ -20,21 +20,21 @@ func TestCheckGuess(t *testing.T) {
 			name:       "Perfect match",
 			guess:      "APPLE",
 			target:     "APPLE",
-			wantResult: []Feedback{Green, Green, Green, Green, Green},
+			wantResult: []Feedback{StatusGreen, StatusGreen, StatusGreen, StatusGreen, StatusGreen},
 			wantErr:    nil,
 		},
 		{
 			name:       "No letters match",
 			guess:      "GHOST",
 			target:     "APPLE",
-			wantResult: []Feedback{Gray, Gray, Gray, Gray, Gray},
+			wantResult: []Feedback{StatusGray, StatusGray, StatusGray, StatusGray, StatusGray},
 			wantErr:    nil,
 		},
 		{
 			name:       "Mixed match with yellows and greens",
 			guess:      "MAPLE",
 			target:     "APPLE",
-			wantResult: []Feedback{Gray, Yellow, Green, Green, Green},
+			wantResult: []Feedback{StatusGray, StatusYellow, StatusGreen, StatusGreen, StatusGreen},
 			wantErr:    nil,
 		},
 		{
@@ -42,7 +42,7 @@ func TestCheckGuess(t *testing.T) {
 			guess:  "ALAMO", // Contains two 'A's
 			target: "BLAME", // Contains one 'A' (at index 2)
 			// The first 'A' must be Gray because the exact match at index 2 (Green) consumes the only available 'A' stock.
-			wantResult: []Feedback{Gray, Green, Green, Green, Gray},
+			wantResult: []Feedback{StatusGray, StatusGreen, StatusGreen, StatusGreen, StatusGray},
 			wantErr:    nil,
 		},
 		{

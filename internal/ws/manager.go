@@ -1,15 +1,20 @@
 package ws
 
-import "sync"
+import (
+	"log/slog"
+	"sync"
+)
 
 type Manager struct {
-	mu    sync.RWMutex
-	rooms map[string]*Room
+	mu     sync.RWMutex
+	rooms  map[string]*Room
+	logger *slog.Logger
 }
 
-func NewManager() *Manager {
+func NewManager(l *slog.Logger) *Manager {
 	return &Manager{
-		rooms: make(map[string]*Room),
+		rooms:  make(map[string]*Room),
+		logger: l,
 	}
 }
 

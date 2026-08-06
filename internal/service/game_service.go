@@ -1,6 +1,7 @@
 package service
 
 import (
+	"log/slog"
 	"strings"
 
 	"github.com/agravlin/wordle-server/internal/errs"
@@ -10,10 +11,14 @@ import (
 
 type GameService struct {
 	manager *ws.Manager
+	logger  *slog.Logger
 }
 
-func NewGameService(m *ws.Manager) *GameService {
-	return &GameService{manager: m}
+func NewGameService(m *ws.Manager, l *slog.Logger) *GameService {
+	return &GameService{
+		manager: m,
+		logger:  l,
+	}
 }
 
 func (s *GameService) ValidateJoinRequest(roomID, nick string) error {
@@ -35,8 +40,14 @@ func (s *GameService) ValidateJoinRequest(roomID, nick string) error {
 }
 
 func (s *GameService) CreateRoom(nick string) (*ws.Room, error) {
-	room := ws.NewRoom(util.GenerateRoomCode(), "")
+	roomCode := util.GenerateRoomCode()
+	room := ws.NewRoom(roomCode, "", s.logger)
 	s.manager.AddRoom(room)
+
+	s.logger.Info("A new room is created",
+		slog.String("room_id", roomCode),
+		slog.String("creator", nick),
+	)
 
 	return room, nil
 }

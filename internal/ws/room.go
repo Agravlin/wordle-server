@@ -1,5 +1,7 @@
 package ws
 
+import "log/slog"
+
 type Room struct {
 	ID         string
 	Clients    map[*Client]bool
@@ -7,9 +9,10 @@ type Room struct {
 	Register   chan *Client
 	Unregister chan *Client
 	TargetWord string
+	logger     *slog.Logger
 }
 
-func NewRoom(id string, targetWord string) *Room {
+func NewRoom(id string, targetWord string, l *slog.Logger) *Room {
 	r := &Room{
 		ID:         id,
 		Clients:    make(map[*Client]bool),
@@ -17,6 +20,7 @@ func NewRoom(id string, targetWord string) *Room {
 		Register:   make(chan *Client),
 		Unregister: make(chan *Client),
 		TargetWord: targetWord,
+		logger:     l.With(slog.String("room_id", id)), // Auto adds {"room_id": "AB12"} in each log
 	}
 
 	go r.Run()
@@ -29,11 +33,13 @@ func (r *Room) Run() {
 		select {
 		case client := <-r.Register:
 			r.Clients[client] = true
+			r.logger.Info("New player joined the room", slog.String("nick", client.Nick))
 
 		case client := <-r.Unregister:
 			if _, ok := r.Clients[client]; ok {
 				delete(r.Clients, client)
 				close(client.Send)
+				r.logger.Info("Player left the room", slog.String("nick", client.Nick))
 			}
 
 		case message := <-r.Broadcast:

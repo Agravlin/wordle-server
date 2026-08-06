@@ -1,7 +1,7 @@
 package api
 
 import (
-	"log"
+	"log/slog"
 	"net/http"
 
 	"github.com/agravlin/wordle-server/internal/ws"
@@ -14,14 +14,22 @@ func (h *Handler) ServeWS(w http.ResponseWriter, r *http.Request) {
 
 	room, err := h.svc.GetRoom(roomID)
 	if err != nil {
-		log.Printf("WS Handshake Error: %v\n", err)
+		h.logger.Error("WS handshake failed",
+			slog.String("error", err.Error()),
+			slog.String("room_id", roomID),
+			slog.String("nick", nick),
+		)
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
 
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Printf("Upgrade error: %v\n", err)
+		h.logger.Error("WebSocket upgrade failed",
+			slog.String("error", err.Error()),
+			slog.String("room_id", roomID),
+			slog.String("nick", nick),
+		)
 		return
 	}
 

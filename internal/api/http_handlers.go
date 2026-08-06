@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"errors"
+	"log/slog"
 	"net/http"
 
 	"github.com/agravlin/wordle-server/internal/errs"
@@ -19,11 +20,15 @@ var upgrader = websocket.Upgrader{
 }
 
 type Handler struct {
-	svc *service.GameService
+	svc    *service.GameService
+	logger *slog.Logger
 }
 
-func NewHandler(svc *service.GameService) *Handler {
-	return &Handler{svc: svc}
+func NewHandler(svc *service.GameService, l *slog.Logger) *Handler {
+	return &Handler{
+		svc:    svc,
+		logger: l,
+	}
 }
 
 // POST /api/create
@@ -53,7 +58,7 @@ func (h *Handler) HandleCreateRoom(w http.ResponseWriter, r *http.Request) {
 }
 
 // POST /api/join
-func (h *Handler) HandleJoinRoom(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) HandleJoinRoomValidation(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return

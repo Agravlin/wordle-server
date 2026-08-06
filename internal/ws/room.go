@@ -1,6 +1,10 @@
 package ws
 
-import "log/slog"
+import (
+	"log/slog"
+
+	"github.com/agravlin/wordle-server/internal/game"
+)
 
 type Room struct {
 	ID         string
@@ -9,7 +13,10 @@ type Room struct {
 	Register   chan *Client
 	Unregister chan *Client
 	TargetWord string
-	logger     *slog.Logger
+
+	logger *slog.Logger
+
+	CurrentGame *game.Game
 }
 
 func NewRoom(id string, targetWord string, l *slog.Logger) *Room {

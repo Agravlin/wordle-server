@@ -1,25 +1,49 @@
 package ws
 
-import "github.com/gorilla/websocket"
+import (
+	"log"
+
+	"github.com/gorilla/websocket"
+)
 
 // Representing a single connected player
 type Client struct {
-	room *Room
-	conn *websocket.Conn
-	send chan []byte
+	Nick string
+	Room *Room
+	Conn *websocket.Conn
+	Send chan []byte
 }
 
-func (c *Client) writePump() {
-	defer c.conn.Close()
+func (c *Client) ReadPump() {
+	defer func() {
+		c.Room.Unregister <- c
+		c.Conn.Close()
+	}()
+
 	for {
-		message, ok := <-c.send
+		_, message, err := c.Conn.ReadMessage()
+		if err != nil {
+			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+				log.Printf("WS Read Error: %v", err)
+			}
+			break
+		}
+
+		c.Room.Broadcast <- message
+	}
+}
+
+func (c *Client) WritePump() {
+	defer c.Conn.Close()
+	for {
+		message, ok := <-c.Send
 		if !ok {
 			// Channel closed
-			c.conn.WriteMessage(websocket.CloseMessage, []byte{})
+			c.Conn.WriteMessage(websocket.CloseMessage, []byte{})
 			return
 		}
 
-		err := c.conn.WriteMessage(websocket.TextMessage, message)
+		err := c.Conn.WriteMessage(websocket.TextMessage, message)
 		if err != nil {
 			return
 		}

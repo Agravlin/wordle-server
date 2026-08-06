@@ -1,46 +1,59 @@
 package ws
 
 type Room struct {
-	id         string
-	clients    map[*Client]bool
-	broadcast  chan []byte
-	register   chan *Client
-	unregister chan *Client
-	targetWord string
+	ID         string
+	Clients    map[*Client]bool
+	Broadcast  chan []byte
+	Register   chan *Client
+	Unregister chan *Client
+	TargetWord string
 }
 
 func NewRoom(id string, targetWord string) *Room {
-	return &Room{
-		id:         id,
-		clients:    make(map[*Client]bool),
-		broadcast:  make(chan []byte),
-		register:   make(chan *Client),
-		unregister: make(chan *Client),
-		targetWord: targetWord,
+	r := &Room{
+		ID:         id,
+		Clients:    make(map[*Client]bool),
+		Broadcast:  make(chan []byte),
+		Register:   make(chan *Client),
+		Unregister: make(chan *Client),
+		TargetWord: targetWord,
 	}
+
+	go r.Run()
+
+	return r
 }
 
 func (r *Room) Run() {
 	for {
 		select {
-		case client := <-r.register:
-			r.clients[client] = true
+		case client := <-r.Register:
+			r.Clients[client] = true
 
-		case client := <-r.unregister:
-			if _, ok := r.clients[client]; ok {
-				delete(r.clients, client)
-				close(client.send)
+		case client := <-r.Unregister:
+			if _, ok := r.Clients[client]; ok {
+				delete(r.Clients, client)
+				close(client.Send)
 			}
 
-		case message := <-r.broadcast:
-			for client := range r.clients {
+		case message := <-r.Broadcast:
+			for client := range r.Clients {
 				select {
-				case client.send <- message:
+				case client.Send <- message:
 				default:
-					close(client.send)
-					delete(r.clients, client)
+					close(client.Send)
+					delete(r.Clients, client)
 				}
 			}
 		}
 	}
+}
+
+func (r *Room) IsNickTaken(nick string) bool {
+	for client := range r.Clients {
+		if client.Nick == nick {
+			return true
+		}
+	}
+	return false
 }

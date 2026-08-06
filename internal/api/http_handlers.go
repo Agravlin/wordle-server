@@ -2,8 +2,10 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
+	"github.com/agravlin/wordle-server/internal/errs"
 	"github.com/agravlin/wordle-server/internal/service"
 	"github.com/gorilla/websocket"
 )
@@ -24,6 +26,32 @@ func NewHandler(svc *service.GameService) *Handler {
 	return &Handler{svc: svc}
 }
 
+// POST /api/create
+func (h *Handler) HandleCreateRoom(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req struct {
+		Nickname string `json:"nickname"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	if _, err := h.svc.CreateRoom(req.Nickname); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(`{"status": "ok"}`))
+}
+
 // POST /api/join
 func (h *Handler) HandleJoinRoom(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
@@ -42,6 +70,11 @@ func (h *Handler) HandleJoinRoom(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.svc.ValidateJoinRequest(req.RoomID, req.Nickname); err != nil {
+		var nickErr *errs.NickAlreadyExists
+		if errors.As(err, &nickErr) {
+			http.Error(w, err.Error(), http.StatusConflict)
+			return
+		}
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}

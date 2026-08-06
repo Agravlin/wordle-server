@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/agravlin/wordle-server/internal/errs"
+	"github.com/agravlin/wordle-server/internal/util"
 	"github.com/agravlin/wordle-server/internal/ws"
 )
 
@@ -31,6 +32,13 @@ func (s *GameService) ValidateJoinRequest(roomID, nick string) error {
 	}
 
 	return nil
+}
+
+func (s *GameService) CreateRoom(nick string) (*ws.Room, error) {
+	room := ws.NewRoom(util.GenerateRoomCode(), "")
+	s.manager.AddRoom(room)
+
+	return room, nil
 }
 
 func (s *GameService) GetRoom(roomID string) (*ws.Room, error) {

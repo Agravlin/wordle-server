@@ -1,8 +1,9 @@
 package ws
 
 import (
-	"log"
+	"log/slog"
 
+	"github.com/agravlin/wordle-server/internal/game"
 	"github.com/gorilla/websocket"
 )
 
@@ -14,6 +15,19 @@ type Client struct {
 	Send chan []byte
 }
 
+type ClientMessage struct {
+	Action   Action `json:"action"`
+	RowState []int  `json:"row_state,omitempty"`
+	Guess    string `json:"guess,omitempty"`
+}
+
+type Action string
+
+const (
+	StateSync  Action = "SYNC_ROW"
+	StateGuess Action = "GUESS"
+)
+
 func (c *Client) ReadPump() {
 	defer func() {
 		c.Room.Unregister <- c
@@ -21,15 +35,17 @@ func (c *Client) ReadPump() {
 	}()
 
 	for {
-		_, message, err := c.Conn.ReadMessage()
+		var msg ClientMessage
+		err := c.Conn.ReadJSON(&msg)
 		if err != nil {
-			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log.Printf("WS Read Error: %v", err)
-			}
+			c.Room.logger.Error("Client disconnected or invalid JSON",
+				slog.String("nick", c.Nick),
+				slog.String("error", err.Error()),
+			)
 			break
 		}
 
-		c.Room.Broadcast <- message
+		c.handleMessage(msg)
 	}
 }
 
@@ -48,4 +64,41 @@ func (c *Client) WritePump() {
 			return
 		}
 	}
+}
+
+func (c *Client) handleMessage(msg ClientMessage) {
+	switch msg.Action {
+	case StateSync:
+		c.handleSyncRow(msg.RowState)
+	case StateGuess:
+		c.handleGuess(msg.Guess)
+	default:
+		c.Room.logger.Warn("Unknown action received",
+			slog.String("action", string(msg.Action)),
+		)
+	}
+}
+
+func (c *Client) handleSyncRow(rowState []int) {
+	if len(rowState) != 5 {
+		c.Room.logger.Warn("Invalid row state length", slog.Int("length", len(rowState)))
+		return
+	}
+
+	currentGame := c.Room.CurrentGame
+	if currentGame == nil {
+		return
+	}
+
+	board, exists := currentGame.GameState.Boards[c.Nick]
+	if !exists || currentGame.State != game.StatePlaying {
+		// Ignore if player is not in game or already finished
+		return
+	}
+
+	c.Room.BroadcastRowUpdate(c.Nick, *board)
+}
+
+func (c *Client) handleGuess(guess string) {
+
 }

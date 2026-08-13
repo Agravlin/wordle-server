@@ -8,6 +8,37 @@ import (
 	"github.com/agravlin/wordle-server/internal/errs"
 )
 
+func TestMakeGuessUpdatesBoardAndFinishesGame(t *testing.T) {
+	g := NewGame("apple", []string{"alice"})
+
+	feedback, err := g.MakeGuess("alice", "apple")
+	if err != nil {
+		t.Fatalf("MakeGuess() error = %v", err)
+	}
+
+	if !reflect.DeepEqual(feedback, []Feedback{StatusGreen, StatusGreen, StatusGreen, StatusGreen, StatusGreen}) {
+		t.Fatalf("MakeGuess() feedback = %v, want all greens", feedback)
+	}
+
+	if g.State != StateFinished {
+		t.Fatalf("MakeGuess() state = %v, want %v", g.State, StateFinished)
+	}
+
+	board, ok := g.GameState.Boards["alice"]
+	if !ok || board == nil {
+		t.Fatalf("MakeGuess() did not create a board for alice")
+	}
+
+	if board.CurrentRow != 1 {
+		t.Fatalf("MakeGuess() current row = %d, want 1", board.CurrentRow)
+	}
+
+	wantRow := []int{int(StatusGreen), int(StatusGreen), int(StatusGreen), int(StatusGreen), int(StatusGreen)}
+	if !reflect.DeepEqual(board.Grid[0], wantRow) {
+		t.Fatalf("MakeGuess() board row = %v, want %v", board.Grid[0], wantRow)
+	}
+}
+
 func TestCheckGuess(t *testing.T) {
 	tests := []struct {
 		name       string

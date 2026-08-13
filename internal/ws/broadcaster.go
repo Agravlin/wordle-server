@@ -29,10 +29,9 @@ func (r *Room) BroadcastFullState(gameState map[string]*game.Board) {
 	r.broadcastJSON("FULL_STATE", gameState)
 }
 
-func (r *Room) BroadcastRowUpdate(nick string, rowIndex int, rowState []int) {
+func (r *Room) BroadcastRowUpdate(nick string, board game.Board) {
 	r.broadcastJSON("BOARD_UPDATE", map[string]any{
 		"nick":  nick,
-		"row":   rowIndex,
-		"state": rowState,
+		"board": board,
 	})
 }

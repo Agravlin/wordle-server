@@ -13,6 +13,7 @@ const (
 	msgNickAlreadyExists = "Nick %s already exists in room %s"
 	msgGameOver          = "Game is already finished"
 	msgNotLegitWord      = "Not a word"
+	msgNickNotFound      = "Nick %s was not found in room %s"
 )
 
 // Static errors
@@ -43,4 +44,14 @@ type NickAlreadyExists struct {
 
 func (e *NickAlreadyExists) Error() string {
 	return fmt.Sprintf(msgNickAlreadyExists, e.Nick, e.RoomCode)
+}
+
+// NickNotFound
+type NickNotFound struct {
+	Nick     string
+	RoomCode string
+}
+
+func (e *NickNotFound) Error() string {
+	return fmt.Sprintf(msgNickNotFound, e.Nick, e.RoomCode)
 }

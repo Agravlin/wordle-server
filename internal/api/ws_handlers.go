@@ -23,6 +23,16 @@ func (h *Handler) ServeWS(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if room.IsNickTaken(nick) {
+		http.Error(w, "Nickname is already in use", http.StatusConflict)
+		return
+	}
+
+	isHost, err := h.svc.IsHostJoining(roomID)
+	if err != nil {
+		http.Error(w, "Can not verify host status", http.StatusInternalServerError)
+	}
+
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		h.logger.Error("WebSocket upgrade failed",
@@ -34,10 +44,11 @@ func (h *Handler) ServeWS(w http.ResponseWriter, r *http.Request) {
 	}
 
 	client := &ws.Client{
-		Nick: nick,
-		Room: room,
-		Conn: conn,
-		Send: make(chan []byte, 256),
+		Nick:   nick,
+		Room:   room,
+		IsHost: isHost,
+		Conn:   conn,
+		Send:   make(chan []byte, 256),
 	}
 
 	client.Room.Register <- client

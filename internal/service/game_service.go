@@ -59,3 +59,12 @@ func (s *GameService) GetRoom(roomID string) (*ws.Room, error) {
 	}
 	return room, nil
 }
+
+func (s *GameService) IsHostJoining(roomID string) (bool, error) {
+	room, err := s.GetRoom(roomID)
+	if err != nil {
+		return false, err
+	}
+
+	return len(room.Clients) == 0, nil
+}

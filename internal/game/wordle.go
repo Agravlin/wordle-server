@@ -16,11 +16,11 @@ var validWordsMap = make(map[string]bool)
 type Feedback int
 
 const (
-	StatusEmpty  Feedback = iota // Empty box
-	StatusTyped                  // Letter typed (but not submitted)
-	StatusGray                   // 0 (Absent)
-	StatusYellow                 // 1 (Present)
-	StatusGreen                  // 2 (Correct)
+	StatusEmpty  Feedback = iota // 0 Empty box
+	StatusTyped                  // 1 Letter typed (but not submitted)
+	StatusGray                   // 2 (Absent)
+	StatusYellow                 // 3 (Present)
+	StatusGreen                  // 4 (Correct)
 )
 
 func init() {

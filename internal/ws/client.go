@@ -100,7 +100,8 @@ func (c *Client) handleSyncRow(rowState []int) {
 		return
 	}
 
-	c.Room.BroadcastRowUpdate(c.Nick, *board)
+	tempBoard := convertRowStateToBoard(board, rowState)
+	c.Room.BroadcastRowUpdate(c.Nick, tempBoard)
 }
 
 func (c *Client) handleGuess(guess string) {
@@ -144,4 +145,16 @@ func (c *Client) handleStartGame() {
 	c.Room.CurrentGame = game.NewGame(game.PickRandomWord(), players)
 
 	c.Room.BroadcastFullState(c.Room.CurrentGame.GameState.Boards)
+}
+
+func convertRowStateToBoard(board *game.Board, rowState []int) game.Board {
+	tempGrid := make([][]int, len(board.Grid))
+	copy(tempGrid, board.Grid)
+
+	tempGrid = append(tempGrid, rowState)
+
+	return game.Board{
+		Grid:       tempGrid,
+		CurrentRow: board.CurrentRow,
+	}
 }

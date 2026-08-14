@@ -27,7 +27,10 @@ func NewGame(target string, players []string) *Game {
 
 	gameState := &GameState{Boards: make(map[string]*Board)}
 	for _, player := range players {
-		gameState.Boards[player] = &Board{CurrentRow: 0}
+		gameState.Boards[player] = &Board{
+			CurrentRow: 0,
+			Grid:       make([][]int, 0),
+		}
 	}
 
 	return &Game{

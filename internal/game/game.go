@@ -2,11 +2,13 @@ package game
 
 import (
 	"strings"
+	"sync"
 
 	"github.com/agravlin/wordle-server/internal/errs"
 )
 
 type Game struct {
+	mu         sync.Mutex
 	State      State
 	TargetWord string
 	Players    []string // Only nicknames
@@ -42,6 +44,11 @@ func NewGame(target string, players []string) *Game {
 }
 
 func (g *Game) MakeGuess(nick string, guess string) ([]Feedback, error) {
+	// Guard against 2 players making a guess at the same time
+	// Not putting the lock to updateBoard, because one player can win before the other
+	g.mu.Lock()
+	defer g.mu.Unlock()
+
 	if g.State != StatePlaying {
 		return nil, errs.ErrGameOver
 	}

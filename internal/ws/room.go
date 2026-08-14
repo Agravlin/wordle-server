@@ -12,7 +12,6 @@ type Room struct {
 	Broadcast  chan []byte
 	Register   chan *Client
 	Unregister chan *Client
-	TargetWord string
 
 	logger *slog.Logger
 
@@ -26,7 +25,6 @@ func NewRoom(id string, targetWord string, l *slog.Logger) *Room {
 		Broadcast:  make(chan []byte),
 		Register:   make(chan *Client),
 		Unregister: make(chan *Client),
-		TargetWord: targetWord,
 		logger:     l.With(slog.String("room_id", id)), // Auto adds {"room_id": "AB12"} in each log
 	}
 

@@ -2,6 +2,7 @@ package game
 
 import (
 	_ "embed"
+	"math/rand"
 	"strings"
 
 	"github.com/agravlin/wordle-server/internal/errs"
@@ -76,6 +77,15 @@ func CheckGuess(guess, target string) ([]Feedback, error) {
 	}
 
 	return result, nil
+}
+
+func PickRandomWord() string {
+	if len(ValidWords) == 0 {
+		return ""
+	}
+
+	randomIndex := rand.Intn(len(ValidWords))
+	return ValidWords[randomIndex]
 }
 
 func isLegitWord(guess string) bool {

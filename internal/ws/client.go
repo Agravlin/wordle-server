@@ -73,6 +73,8 @@ func (c *Client) handleMessage(msg ClientMessage) {
 		c.handleSyncRow(msg.RowState)
 	case StateGuess:
 		c.handleGuess(msg.Guess)
+	case StateStart:
+		c.handleStartGame()
 	default:
 		c.Room.logger.Warn("Unknown action received",
 			slog.String("action", string(msg.Action)),
@@ -125,4 +127,15 @@ func (c *Client) handleGuess(guess string) {
 	if currentGame.State == game.StateFinished {
 		c.Room.BroadcastFullState(currentGame.GameState.Boards)
 	}
+}
+
+func (c *Client) handleStartGame() {
+	var players []string
+	for client := range c.Room.Clients {
+		players = append(players, client.Nick)
+	}
+
+	c.Room.CurrentGame = game.NewGame(game.PickRandomWord(), players)
+
+	c.Room.BroadcastFullState(c.Room.CurrentGame.GameState.Boards)
 }

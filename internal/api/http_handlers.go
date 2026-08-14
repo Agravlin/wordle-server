@@ -47,14 +47,24 @@ func (h *Handler) HandleCreateRoom(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if _, err := h.svc.CreateRoom(req.Nickname); err != nil {
+	room, err := h.svc.CreateRoom(req.Nickname)
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
+	resp := struct {
+		RoomCode string `json:"room_id"`
+	}{
+		RoomCode: room.ID,
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"status": "ok"}`))
+	if err := json.NewEncoder(w).Encode(resp); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 // POST /api/join

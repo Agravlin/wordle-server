@@ -9,11 +9,10 @@ import (
 
 // Representing a single connected player
 type Client struct {
-	Nick   string
-	Room   *Room
-	IsHost bool
-	Conn   *websocket.Conn
-	Send   chan []byte
+	Nick string
+	Room *Room
+	Conn *websocket.Conn
+	Send chan []byte
 }
 
 type ClientMessage struct {
@@ -132,7 +131,7 @@ func (c *Client) handleGuess(guess string) {
 }
 
 func (c *Client) handleStartGame() {
-	if !c.IsHost {
+	if !c.Room.IsHost(c.Nick) {
 		c.Room.logger.Warn("A non-host player tried to start the game", "nick", c.Nick)
 		return
 	}

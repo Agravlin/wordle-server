@@ -8,6 +8,7 @@ import (
 
 type Room struct {
 	ID         string
+	HostNick   string
 	Clients    map[*Client]bool
 	Broadcast  chan []byte
 	Register   chan *Client
@@ -18,9 +19,10 @@ type Room struct {
 	CurrentGame *game.Game
 }
 
-func NewRoom(id string, targetWord string, l *slog.Logger) *Room {
+func NewRoom(id, nick string, l *slog.Logger) *Room {
 	r := &Room{
 		ID:         id,
+		HostNick:   nick,
 		Clients:    make(map[*Client]bool),
 		Broadcast:  make(chan []byte),
 		Register:   make(chan *Client),
@@ -67,4 +69,8 @@ func (r *Room) IsNickTaken(nick string) bool {
 		}
 	}
 	return false
+}
+
+func (r *Room) IsHost(nick string) bool {
+	return r.HostNick == nick
 }

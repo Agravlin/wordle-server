@@ -41,7 +41,7 @@ func (s *GameService) ValidateJoinRequest(roomID, nick string) error {
 
 func (s *GameService) CreateRoom(nick string) (*ws.Room, error) {
 	roomCode := util.GenerateRoomCode()
-	room := ws.NewRoom(roomCode, "", s.logger)
+	room := ws.NewRoom(roomCode, nick, s.logger)
 	s.manager.AddRoom(room)
 
 	s.logger.Info("A new room is created",
@@ -58,13 +58,4 @@ func (s *GameService) GetRoom(roomID string) (*ws.Room, error) {
 		return nil, &errs.RoomNotFound{RoomCode: roomID}
 	}
 	return room, nil
-}
-
-func (s *GameService) IsHostJoining(roomID string) (bool, error) {
-	room, err := s.GetRoom(roomID)
-	if err != nil {
-		return false, err
-	}
-
-	return len(room.Clients) == 0, nil
 }

@@ -26,6 +26,7 @@ type Action string
 const (
 	StateSync  Action = "SYNC_ROW"
 	StateGuess Action = "GUESS"
+	StateStart Action = "START_GAME"
 )
 
 func (c *Client) ReadPump() {
@@ -100,5 +101,28 @@ func (c *Client) handleSyncRow(rowState []int) {
 }
 
 func (c *Client) handleGuess(guess string) {
+	currentGame := c.Room.CurrentGame
+	if currentGame == nil || currentGame.State != game.StatePlaying {
+		return
+	}
 
+	_, err := currentGame.MakeGuess(c.Nick, guess)
+	if err != nil {
+		c.Room.logger.Warn("Guess failed",
+			"nick", c.Nick,
+			"error", err.Error(),
+		)
+		return
+	}
+
+	board, exists := currentGame.GameState.Boards[c.Nick]
+	if !exists {
+		return
+	}
+
+	c.Room.BroadcastRowUpdate(c.Nick, *board)
+
+	if currentGame.State == game.StateFinished {
+		c.Room.BroadcastFullState(currentGame.GameState.Boards)
+	}
 }

@@ -41,24 +41,29 @@ func (r *Room) Run() {
 		case client := <-r.Register:
 			r.Clients[client] = true
 			r.logger.Info("New player joined the room", slog.String("nick", client.Nick))
-			r.BroadcastPlayerList()
+			r.broadcastPlayerList()
 
 		case client := <-r.Unregister:
 			if _, ok := r.Clients[client]; ok {
 				delete(r.Clients, client)
 				close(client.Send)
 				r.logger.Info("Player left the room", slog.String("nick", client.Nick))
+				r.broadcastPlayerList()
 			}
 
 		case message := <-r.Broadcast:
-			for client := range r.Clients {
-				select {
-				case client.Send <- message:
-				default:
-					close(client.Send)
-					delete(r.Clients, client)
-				}
-			}
+			r.sendToClients(message)
+		}
+	}
+}
+
+func (r *Room) sendToClients(message []byte) {
+	for client := range r.Clients {
+		select {
+		case client.Send <- message:
+		default:
+			close(client.Send)
+			delete(r.Clients, client)
 		}
 	}
 }

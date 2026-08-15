@@ -115,6 +115,12 @@ func (c *Client) handleGuess(guess string) {
 			"nick", c.Nick,
 			"error", err.Error(),
 		)
+		message, ok := c.Room.jsonMessage("GUESS_REJECTED", map[string]string{
+			"message": err.Error(),
+		})
+		if ok {
+			c.Send <- message
+		}
 		return
 	}
 

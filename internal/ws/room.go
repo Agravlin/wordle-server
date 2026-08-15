@@ -41,6 +41,7 @@ func (r *Room) Run() {
 		case client := <-r.Register:
 			r.Clients[client] = true
 			r.logger.Info("New player joined the room", slog.String("nick", client.Nick))
+			r.BroadcastPlayerList()
 
 		case client := <-r.Unregister:
 			if _, ok := r.Clients[client]; ok {

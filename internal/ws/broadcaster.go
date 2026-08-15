@@ -35,3 +35,12 @@ func (r *Room) BroadcastRowUpdate(nick string, board game.Board) {
 		"board": board,
 	})
 }
+
+func (r *Room) BroadcastPlayerList() {
+	var players []string
+	for client := range r.Clients {
+		players = append(players, client.Nick)
+	}
+
+	r.broadcastJSON("PLAYER_LIST", players)
+}

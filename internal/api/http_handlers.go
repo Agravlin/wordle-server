@@ -15,7 +15,7 @@ var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
 	CheckOrigin: func(r *http.Request) bool {
-		return true
+		return true // Consider restricting in production
 	},
 }
 
@@ -88,6 +88,11 @@ func (h *Handler) HandleJoinRoomValidation(w http.ResponseWriter, r *http.Reques
 		var nickErr *errs.NickAlreadyExists
 		if errors.As(err, &nickErr) {
 			http.Error(w, err.Error(), http.StatusConflict)
+			return
+		}
+		var roomErr *errs.RoomNotFound
+		if errors.As(err, &roomErr) {
+			http.Error(w, err.Error(), http.StatusNotFound)
 			return
 		}
 		http.Error(w, err.Error(), http.StatusBadRequest)
